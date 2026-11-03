@@ -10,7 +10,7 @@ use crate::{
     output::{Output, output_path},
     schema::{
         Def, EnumDef, FieldDef, OptionDef, Schema, StructDef, TypeDef, VecDef,
-        extensions::visit::{Scope, VisitorNames},
+        extensions::visit::{FieldScope, Scope, VisitorNames},
     },
     utils::{create_ident, create_ident_tokens, create_safe_ident},
 };
@@ -172,10 +172,75 @@ fn parse_scope_attr(location: AttrLocation, part: AttrPart) -> Result<()> {
             let scope = struct_def.visit.scope.as_mut().ok_or(())?;
             scope.exit_before_index = field_index;
         }
+        // `#[scope(field_scope(id = ..., when = ...))]` on struct field
+        (
+            AttrPart::List("field_scope", list),
+            AttrLocation::StructField(struct_def, field_index),
+        ) => {
+            if !struct_def.visit.has_visitor() {
+                return Err(());
+            }
+
+            let mut id_field_name = None;
+            let mut when = None;
+            for list_element in list {
+                let (name, value) = list_element.try_into_string()?;
+                match name.as_str() {
+                    "id" => id_field_name = Some(value),
+                    "when" => when = Some(value),
+                    _ => return Err(()),
+                }
+            }
+
+            let field_scope = &mut struct_def.fields[field_index].visit.field_scope;
+            if field_scope.is_some() {
+                return Err(());
+            }
+            *field_scope =
+                Some(FieldScope { id_field_name: id_field_name.ok_or(())?, when: when.ok_or(())? });
+        }
         _ => return Err(()),
     }
 
     Ok(())
+}
+
+/// Wrap visitor call for a struct field in `enter_scope` / `leave_scope` calls,
+/// if the field has its own scope (`#[scope(field_scope(...))]`).
+///
+/// The condition is evaluated once, so a `VisitMut` visitor which mutates the field
+/// still exits the scope it entered.
+///
+/// Also used by generator for `VisitJs` trait.
+pub fn wrap_field_scope(
+    visit: TokenStream,
+    field: &FieldDef,
+    struct_def: &StructDef,
+    schema: &Schema,
+) -> TokenStream {
+    let Some(field_scope) = &field.visit.field_scope else { return visit };
+
+    let id_field_ident = field_scope.id_field(struct_def, schema).ident();
+    let when = parse_str::<Expr>(&field_scope.when.cow_replace("self", "it")).unwrap();
+    let else_branch = else_branch(visit.clone(), field, schema);
+    quote! {
+        if #when {
+            visitor.enter_scope(ScopeFlags::empty(), &it.#id_field_ident);
+            #visit
+            visitor.leave_scope();
+        } else #else_branch
+    }
+}
+
+/// Generate the `else` branch for code which visits a struct field, when the field has its own
+/// scope which is not entered.
+///
+/// Code for an `Option` field is already an `if let` statement, so it follows `else` directly,
+/// rather than being wrapped in a block (`else if let`, not `else { if let }`).
+///
+/// Also used by generators for `ChildScopeCollector` and `Traverse`.
+pub fn else_branch(visit: TokenStream, field: &FieldDef, schema: &Schema) -> TokenStream {
+    if field.type_def(schema).is_option() { visit } else { quote!({ #visit }) }
 }
 
 /// Generate outputs for `Visit` and `VisitMut`.
@@ -415,6 +480,7 @@ impl VisitBuilder<'_> {
             .enumerate()
             .filter_map(|(field_index, field)| {
                 let (visit, visit_mut) = self.generate_struct_field_visit(
+                    struct_def,
                     field,
                     field_index,
                     &mut scope_entry,
@@ -468,6 +534,7 @@ impl VisitBuilder<'_> {
     /// Also inserts `enter_scope` / `leave_scope` calls before the visit call if needed.
     fn generate_struct_field_visit(
         &self,
+        struct_def: &StructDef,
         field: &FieldDef,
         field_index: usize,
         scope_entry: &mut Option<(usize, TokenStream)>,
@@ -485,6 +552,8 @@ impl VisitBuilder<'_> {
             true,
             self.schema,
         )?;
+        visit = wrap_field_scope(visit, field, struct_def, self.schema);
+        visit_mut = wrap_field_scope(visit_mut, field, struct_def, self.schema);
 
         // Insert `enter_scope` / `leave_scope` call, if scope needs to be entered/exited before this field.
         //

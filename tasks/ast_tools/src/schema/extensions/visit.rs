@@ -1,6 +1,9 @@
 use syn::Ident;
 
-use crate::utils::create_safe_ident;
+use crate::{
+    schema::{Def, FieldDef, Schema, StructDef},
+    utils::create_safe_ident,
+};
 
 /// Details of visiting on a struct.
 #[derive(Default, Debug)]
@@ -79,6 +82,9 @@ impl VisitVec {
 #[derive(Default, Debug)]
 pub struct VisitFieldOrVariant {
     pub visit_args: Vec<(String, String)>,
+    /// Scope which is entered around this field, if it has one.
+    /// Only valid on struct fields.
+    pub field_scope: Option<FieldScope>,
 }
 
 /// Names for visitor method and walk function.
@@ -124,4 +130,56 @@ pub struct Scope {
     /// Conditions in which scope is strict mode.
     /// Stored as a string which should be parsed as an expression.
     pub strict_if: Option<String>,
+}
+
+/// Details of a scope which is entered around a single struct field.
+///
+/// Parsed from `#[scope(field_scope(id = consequent_scope_id, when = self.has_scope()))]`
+/// on a struct field. The struct cannot also have a struct-level scope.
+#[derive(Debug)]
+pub struct FieldScope {
+    /// Name of the `Cell<Option<ScopeId>>` field which holds the scope's ID.
+    pub id_field_name: String,
+    /// Condition in which scope is entered.
+    /// Stored as a string which should be parsed as an expression.
+    pub when: String,
+}
+
+impl FieldScope {
+    /// Get the field which holds the scope's ID.
+    ///
+    /// # Panics
+    /// Panics if `struct_def` has a struct-level scope, or the ID field does not exist,
+    /// or is not a `Cell<Option<ScopeId>>`.
+    pub fn id_field<'s>(&self, struct_def: &'s StructDef, schema: &Schema) -> &'s FieldDef {
+        assert!(
+            struct_def.visit.scope.is_none(),
+            "`{}` cannot have both a struct-level scope and a field scope",
+            struct_def.name()
+        );
+
+        let id_field = struct_def
+            .fields
+            .iter()
+            .find(|field| field.name() == self.id_field_name)
+            .unwrap_or_else(|| {
+                panic!("`{}` has no field `{}`", struct_def.name(), self.id_field_name)
+            });
+
+        let scope_id_type_id = schema.type_names["ScopeId"];
+        let is_scope_id_cell = id_field.type_def(schema).as_cell().is_some_and(|cell_def| {
+            cell_def
+                .inner_type(schema)
+                .as_option()
+                .is_some_and(|option_def| option_def.inner_type_id == scope_id_type_id)
+        });
+        assert!(
+            is_scope_id_cell,
+            "`{}::{}` must be a `Cell<Option<ScopeId>>`",
+            struct_def.name(),
+            self.id_field_name
+        );
+
+        id_field
+    }
 }
