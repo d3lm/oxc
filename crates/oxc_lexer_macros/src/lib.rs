@@ -8,6 +8,8 @@
 //!
 //! - [`cpu_multiversion`]: One function, compiled once for each feature set.
 //! - [`cpu_version`]: One version of some code, for one feature set.
+//! - [`cpu_impl`]: Methods of one feature set's types, which exist on every platform,
+//!   but only work on the platform which has the feature set.
 //!
 //! `oxc_lexer`'s `cpu_select!` macro chooses between versions.
 //!
@@ -22,6 +24,7 @@ use syn::{Error, Result};
 
 mod cpu;
 mod func;
+mod impl_block;
 mod multiversion;
 mod version;
 
@@ -173,6 +176,8 @@ mod version;
 ///             match to_dyn(cpu) {
 ///                 // SAFETY: `Avx2` type guarantees the CPU supports the features `__avx2` uses
 ///                 DynCpu::Avx2(cpu) => unsafe { __avx2(src, n, cpu) },
+///                 // `Neon` type is uninhabited on x86_64
+///                 DynCpu::Neon(_) => unreachable!(),
 ///                 // SAFETY: `__generic` only has `#[target_feature(enable = "sse2")]`
 ///                 // when SSE2 is enabled for the whole crate, so the CPU supports it
 ///                 DynCpu::Generic(cpu) => unsafe { __generic(src, n, cpu) },
@@ -186,6 +191,8 @@ mod version;
 ///             }
 ///
 ///             match to_dyn(cpu) {
+///                 // `Avx2` type is uninhabited on aarch64
+///                 DynCpu::Avx2(_) => unreachable!(),
 ///                 // SAFETY: `Neon` type guarantees the CPU supports the features `__neon` uses
 ///                 DynCpu::Neon(cpu) => unsafe { __neon(src, n, cpu) },
 ///                 DynCpu::Generic(cpu) => unsafe { __generic(src, n, cpu) },
@@ -193,6 +200,9 @@ mod version;
 ///         }
 ///         _ => {
 ///             match to_dyn(cpu) {
+///                 // `Avx2` and `Neon` types are uninhabited on other platforms
+///                 DynCpu::Avx2(_) => unreachable!(),
+///                 DynCpu::Neon(_) => unreachable!(),
 ///                 // SAFETY: `__generic` only has `#[target_feature(enable = "sse2")]`
 ///                 // when SSE2 is enabled for the whole crate, so the CPU supports it
 ///                 DynCpu::Generic(cpu) => unsafe { __generic(src, n, cpu) },
@@ -201,6 +211,10 @@ mod version;
 ///     }
 /// }
 /// ```
+///
+/// `DynCpu` has a variant for each feature set on every platform, so each `match` has an arm
+/// for each. On a platform without a SIMD feature set, that feature set's type is uninhabited,
+/// so its arm can never run, and is `unreachable!()`.
 ///
 /// For a method, the `match` is the whole body of the outer method, in a `cfg_select!` of its
 /// own, and the other functions are methods next to it.
@@ -311,6 +325,74 @@ pub fn cpu_multiversion(args: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn cpu_version(args: TokenStream, item: TokenStream) -> TokenStream {
     output(version::expand(args.into(), item.into()))
+}
+
+/// Marks an `impl` block as methods of one CPU feature set's types,
+/// which only work on the platform which has that feature set.
+///
+/// Applied to an `impl` block with one of:
+///
+/// - `#[cpu_impl(Avx2)]`: The method bodies are only compiled on x86_64.
+/// - `#[cpu_impl(Neon)]`: The method bodies are only compiled on aarch64.
+///
+/// On other platforms, each method's body is replaced with `unreachable!()`.
+/// Its signature is unchanged, so the method exists on every platform,
+/// and code which calls it compiles everywhere.
+///
+/// Every method must take a value which proves that the CPU supports the feature set,
+/// e.g. `self` of a `Vec256<Avx2>`, or a `cpu: Avx2` parameter. On other platforms, the feature
+/// set's type is uninhabited, so that value can't exist, and the method can never be called.
+/// The macro doesn't check this. A method which doesn't take one would panic if called
+/// on another platform.
+///
+/// ```ignore
+/// #[cpu_impl(Avx2)]
+/// impl Vec256<Avx2> {
+///     /// Gather the top bit of each byte of this [`Vec256`] into a 32-bit mask.
+///     #[inline(always)]
+///     pub fn movemask(self) -> u32 {
+///         // SAFETY: `Vec256` type guarantees platform supports AVX2
+///         unsafe { _mm256_movemask_epi8(self.inner).cast_unsigned() }
+///     }
+/// }
+/// ```
+///
+/// expands to:
+///
+/// ```ignore
+/// #[cfg_attr(
+///     not(target_arch = "x86_64"),
+///     allow(dead_code, unused_variables, clippy::unused_self, clippy::needless_pass_by_value)
+/// )]
+/// impl Vec256<Avx2> {
+///     /// Gather the top bit of each byte of this [`Vec256`] into a 32-bit mask.
+///     #[inline(always)]
+///     pub fn movemask(self) -> u32 {
+///         cfg_select! {
+///             target_arch = "x86_64" => {
+///                 // SAFETY: `Vec256` type guarantees platform supports AVX2
+///                 unsafe { _mm256_movemask_epi8(self.inner).cast_unsigned() }
+///             }
+///             _ => unreachable!(),
+///         }
+///     }
+/// }
+/// ```
+///
+/// On other platforms, nothing calls the methods, and their bodies don't use their parameters.
+/// The `allow` silences the lints for that. It's `allow`, not `expect`, because which of them fire
+/// depends on the methods. e.g. methods of a trait implementation are never dead code,
+/// and clippy doesn't lint their parameters.
+///
+/// Only method bodies change. Everything else is output unchanged, so it must compile on every
+/// platform. That includes the types in the methods' signatures, and other items in the `impl`
+/// block (e.g. `type Inner = __m256i;`). `__m256i` only exists on x86_64.
+///
+/// The tokens of the `impl` block are scanned, not parsed, so the macro is quick to compile.
+/// A method's body is the first `{ ... }` after `fn`.
+#[proc_macro_attribute]
+pub fn cpu_impl(args: TokenStream, item: TokenStream) -> TokenStream {
+    output(impl_block::expand(args.into(), item.into()))
 }
 
 /// The macro's output, or the error as a `compile_error!`.
