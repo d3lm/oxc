@@ -8137,6 +8137,38 @@ impl<'a> Statement<'a> {
         Self::IfStatement(IfStatement::boxed(span, test, consequent, alternate, builder.builder()))
     }
 
+    /// Build a [`Statement::IfStatement`] with `consequent_scope_id` and `alternate_scope_id`.
+    ///
+    /// This node contains an [`IfStatement`] that will be stored in the memory arena.
+    ///
+    /// ## Parameters
+    /// * `span`: The [`Span`] covering this node
+    /// * `test`
+    /// * `consequent`
+    /// * `alternate`
+    /// * `consequent_scope_id`: Scope of `consequent`, if it is a function declaration
+    /// * `alternate_scope_id`: Scope of `alternate`, if it is a function declaration
+    #[inline]
+    pub fn new_if_statement_with_consequent_scope_id_and_alternate_scope_id(
+        span: Span,
+        test: Expression<'a>,
+        consequent: Statement<'a>,
+        alternate: Option<Statement<'a>>,
+        consequent_scope_id: ScopeId,
+        alternate_scope_id: ScopeId,
+        builder: &impl GetAstBuilder<'a>,
+    ) -> Self {
+        Self::IfStatement(IfStatement::boxed_with_consequent_scope_id_and_alternate_scope_id(
+            span,
+            test,
+            consequent,
+            alternate,
+            consequent_scope_id,
+            alternate_scope_id,
+            builder.builder(),
+        ))
+    }
+
     /// Build a [`Statement::LabeledStatement`].
     ///
     /// This node contains a [`LabeledStatement`] that will be stored in the memory arena.
@@ -9944,7 +9976,15 @@ impl<'a> IfStatement<'a> {
         builder: &impl GetAstBuilder<'a>,
     ) -> Self {
         let builder = builder.builder();
-        IfStatement { node_id: Cell::new(builder.node_id()), span, test, consequent, alternate }
+        IfStatement {
+            node_id: Cell::new(builder.node_id()),
+            span,
+            test,
+            consequent,
+            alternate,
+            consequent_scope_id: Default::default(),
+            alternate_scope_id: Default::default(),
+        }
     }
 
     /// Build an [`IfStatement`], and store it in the memory arena.
@@ -9968,6 +10008,77 @@ impl<'a> IfStatement<'a> {
         let builder = builder.builder();
         ArenaBox::new_in(
             Self::new(span, test, consequent, alternate, builder),
+            &builder.allocator(),
+        )
+    }
+
+    /// Build an [`IfStatement`] with `consequent_scope_id` and `alternate_scope_id`.
+    ///
+    /// If you want the built node to be allocated in the memory arena,
+    /// use [`IfStatement::boxed_with_consequent_scope_id_and_alternate_scope_id`] instead.
+    ///
+    /// ## Parameters
+    /// * `span`: The [`Span`] covering this node
+    /// * `test`
+    /// * `consequent`
+    /// * `alternate`
+    /// * `consequent_scope_id`: Scope of `consequent`, if it is a function declaration
+    /// * `alternate_scope_id`: Scope of `alternate`, if it is a function declaration
+    #[inline]
+    pub fn new_with_consequent_scope_id_and_alternate_scope_id(
+        span: Span,
+        test: Expression<'a>,
+        consequent: Statement<'a>,
+        alternate: Option<Statement<'a>>,
+        consequent_scope_id: ScopeId,
+        alternate_scope_id: ScopeId,
+        builder: &impl GetAstBuilder<'a>,
+    ) -> Self {
+        let builder = builder.builder();
+        IfStatement {
+            node_id: Cell::new(builder.node_id()),
+            span,
+            test,
+            consequent,
+            alternate,
+            consequent_scope_id: Cell::new(Some(consequent_scope_id)),
+            alternate_scope_id: Cell::new(Some(alternate_scope_id)),
+        }
+    }
+
+    /// Build an [`IfStatement`] with `consequent_scope_id` and `alternate_scope_id`, and store it in the memory arena.
+    ///
+    /// Returns a [`Box`](ArenaBox) containing the newly-allocated node.
+    /// If you want a stack-allocated node, use [`IfStatement::new_with_consequent_scope_id_and_alternate_scope_id`] instead.
+    ///
+    /// ## Parameters
+    /// * `span`: The [`Span`] covering this node
+    /// * `test`
+    /// * `consequent`
+    /// * `alternate`
+    /// * `consequent_scope_id`: Scope of `consequent`, if it is a function declaration
+    /// * `alternate_scope_id`: Scope of `alternate`, if it is a function declaration
+    #[inline]
+    pub fn boxed_with_consequent_scope_id_and_alternate_scope_id(
+        span: Span,
+        test: Expression<'a>,
+        consequent: Statement<'a>,
+        alternate: Option<Statement<'a>>,
+        consequent_scope_id: ScopeId,
+        alternate_scope_id: ScopeId,
+        builder: &impl GetAstBuilder<'a>,
+    ) -> ArenaBox<'a, Self> {
+        let builder = builder.builder();
+        ArenaBox::new_in(
+            Self::new_with_consequent_scope_id_and_alternate_scope_id(
+                span,
+                test,
+                consequent,
+                alternate,
+                consequent_scope_id,
+                alternate_scope_id,
+                builder,
+            ),
             &builder.allocator(),
         )
     }

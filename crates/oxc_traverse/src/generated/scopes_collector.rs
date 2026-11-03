@@ -714,8 +714,14 @@ impl<'a> Visit<'a> for ChildScopeCollector {
     #[inline]
     fn visit_if_statement(&mut self, it: &IfStatement<'a>) {
         self.visit_expression(&it.test);
-        self.visit_statement(&it.consequent);
-        if let Some(alternate) = &it.alternate {
+        if it.consequent_has_scope() {
+            self.add_scope(&it.consequent_scope_id);
+        } else {
+            self.visit_statement(&it.consequent);
+        }
+        if it.alternate_has_scope() {
+            self.add_scope(&it.alternate_scope_id);
+        } else if let Some(alternate) = &it.alternate {
             self.visit_statement(alternate);
         }
     }

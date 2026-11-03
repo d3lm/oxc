@@ -825,6 +825,40 @@ impl IfStatement<'_> {
     pub fn set_node_id(&self, node_id: NodeId) {
         self.node_id.set(node_id);
     }
+
+    /// Get [`ScopeId`] of [`IfStatement`].
+    ///
+    /// Only use this method on a post-semantic AST where [`ScopeId`]s are always defined.
+    ///
+    /// # Panics
+    /// Panics if `consequent_scope_id` is [`None`].
+    #[inline]
+    pub fn consequent_scope_id(&self) -> ScopeId {
+        self.consequent_scope_id.get().unwrap()
+    }
+
+    /// Set [`ScopeId`] of [`IfStatement`].
+    #[inline]
+    pub fn set_consequent_scope_id(&self, consequent_scope_id: ScopeId) {
+        self.consequent_scope_id.set(Some(consequent_scope_id));
+    }
+
+    /// Get [`ScopeId`] of [`IfStatement`].
+    ///
+    /// Only use this method on a post-semantic AST where [`ScopeId`]s are always defined.
+    ///
+    /// # Panics
+    /// Panics if `alternate_scope_id` is [`None`].
+    #[inline]
+    pub fn alternate_scope_id(&self) -> ScopeId {
+        self.alternate_scope_id.get().unwrap()
+    }
+
+    /// Set [`ScopeId`] of [`IfStatement`].
+    #[inline]
+    pub fn set_alternate_scope_id(&self, alternate_scope_id: ScopeId) {
+        self.alternate_scope_id.set(Some(alternate_scope_id));
+    }
 }
 
 impl DoWhileStatement<'_> {

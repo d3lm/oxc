@@ -435,13 +435,15 @@ const _: () = {
     assert!(offset_of!(ExpressionStatement, expression) == 16);
 
     // Padding: 4 bytes
-    assert!(size_of::<IfStatement>() == 64);
+    assert!(size_of::<IfStatement>() == 72);
     assert!(align_of::<IfStatement>() == 8);
     assert!(offset_of!(IfStatement, span) == 0);
     assert!(offset_of!(IfStatement, node_id) == 8);
+    assert!(offset_of!(IfStatement, consequent_scope_id) == 12);
     assert!(offset_of!(IfStatement, test) == 16);
     assert!(offset_of!(IfStatement, consequent) == 32);
     assert!(offset_of!(IfStatement, alternate) == 48);
+    assert!(offset_of!(IfStatement, alternate_scope_id) == 64);
 
     // Padding: 4 bytes
     assert!(size_of::<DoWhileStatement>() == 48);
@@ -2280,13 +2282,15 @@ const _: () = if cfg!(target_family = "wasm") || align_of::<u64>() == 8 {
     assert!(offset_of!(ExpressionStatement, expression) == 12);
 
     // Padding: 0 bytes
-    assert!(size_of::<IfStatement>() == 36);
+    assert!(size_of::<IfStatement>() == 44);
     assert!(align_of::<IfStatement>() == 4);
     assert!(offset_of!(IfStatement, span) == 0);
     assert!(offset_of!(IfStatement, node_id) == 8);
-    assert!(offset_of!(IfStatement, test) == 12);
-    assert!(offset_of!(IfStatement, consequent) == 20);
-    assert!(offset_of!(IfStatement, alternate) == 28);
+    assert!(offset_of!(IfStatement, consequent_scope_id) == 12);
+    assert!(offset_of!(IfStatement, test) == 16);
+    assert!(offset_of!(IfStatement, consequent) == 24);
+    assert!(offset_of!(IfStatement, alternate) == 32);
+    assert!(offset_of!(IfStatement, alternate_scope_id) == 40);
 
     // Padding: 0 bytes
     assert!(size_of::<DoWhileStatement>() == 28);

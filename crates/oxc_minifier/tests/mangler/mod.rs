@@ -463,6 +463,11 @@ fn annex_b_block_function_without_hoisting() {
         "function _() { let x; { function g() { return x; } function h() {} } let g, h; return [x, g, h]; }",
         // The parameter that shadows the function expression's name prevents the write.
         "(function g(g) { { function g() {} } return g; })",
+        // A function declaration that is an `if` branch is in its own block scope.
+        "function _() { var x = 1; if (x) function g() {} let g = 2; return [x, g]; }",
+        "function _() { var g; if (x) function g() {} return g; }",
+        "function _() { var g = 0; { let g; if (x) function g() {} } return g; }",
+        "function _() { if (x) function g() { return 1; } else function g() { return 2; } return g(); }",
         // Bindings visible to direct `eval` keep their names, without affecting other functions.
         "function _() { eval(''); { let e; { function e() {} let x = 1; use(x); } } } function f() { var g; { function g() {} } return g; }",
         "function _() { { function g() {} eval(''); let x = 1; } let g; var y = 1; return y; }",

@@ -9,7 +9,7 @@ use oxc_span::GetSpan;
 use oxc_str::Ident;
 use oxc_syntax::{node::NodeId, scope::ScopeFlags, scope::ScopeId, symbol::SymbolFlags};
 
-use crate::{SemanticBuilder, checker::is_function_decl_part_of_if_statement};
+use crate::SemanticBuilder;
 
 pub trait Binder<'a> {
     fn bind(&self, builder: &mut SemanticBuilder<'a>);
@@ -164,16 +164,8 @@ impl<'a> Binder<'a> for Function<'a> {
                 includes |= SymbolFlags::AsyncOrGeneratorFunction;
             }
 
-            // Annex B.3.3 places these in their own implicit block, so they neither conflict with
-            // nor hoist like declarations in the enclosing scope.
-            let is_if_statement_function = is_declaration
-                && !builder.source_type.is_typescript()
-                && is_function_decl_part_of_if_statement(self, builder);
-
             let excludes = if builder.source_type.is_typescript() {
                 SymbolFlags::FunctionExcludes
-            } else if is_if_statement_function {
-                SymbolFlags::empty()
             } else {
                 // `var x; function x() {}` is valid in non-strict mode, but `TypeScript`
                 // doesn't care about non-strict mode, so we need to exclude this,
@@ -182,18 +174,26 @@ impl<'a> Binder<'a> for Function<'a> {
             };
 
             let scope_flags = builder.current_scope_flags();
-            let is_block_declaration =
-                is_declaration && !is_if_statement_function && !scope_flags.is_var();
-            if is_block_declaration {
+            if is_declaration && !scope_flags.is_var() {
                 builder.declare_annex_b_blocker(ident.name);
             }
 
-            let symbol_id = builder.declare_symbol(ident.span, ident.name, includes, excludes);
+            // A function declaration which is an `if` branch is in that branch's own scope
+            // (see `IfStatement::consequent_has_scope`). Without Annex B (TypeScript, or strict mode
+            // code where it is an early error), bind it in the scope enclosing the `if` statement.
+            let scope_id = if is_declaration
+                && (builder.source_type.is_typescript() || scope_flags.is_strict_mode())
+                && matches!(builder.ancestry().parent_kind(), AstKind::IfStatement(_))
+            {
+                builder.scoping.scope_parent_id(builder.current_scope_id).unwrap()
+            } else {
+                builder.current_scope_id
+            };
+            let symbol_id = builder
+                .declare_symbol_on_scope(ident.span, ident.name, scope_id, includes, excludes);
             ident.symbol_id.set(Some(symbol_id));
 
-            if is_if_statement_function {
-                builder.declare_annex_b_if_statement_function(symbol_id);
-            } else if is_declaration && scope_flags.is_var() {
+            if is_declaration && scope_flags.is_var() {
                 builder.declare_annex_b_var(builder.current_scope_id, ident.name);
             }
 

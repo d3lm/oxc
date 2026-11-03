@@ -1831,8 +1831,20 @@ pub mod walk_js {
         visitor.enter_node(kind);
         visitor.visit_span(&it.span);
         visitor.visit_expression(&it.test);
-        visitor.visit_statement(&it.consequent);
-        if let Some(alternate) = &it.alternate {
+        if it.consequent_has_scope() {
+            visitor.enter_scope(ScopeFlags::empty(), &it.consequent_scope_id);
+            visitor.visit_statement(&it.consequent);
+            visitor.leave_scope();
+        } else {
+            visitor.visit_statement(&it.consequent);
+        }
+        if it.alternate_has_scope() {
+            visitor.enter_scope(ScopeFlags::empty(), &it.alternate_scope_id);
+            if let Some(alternate) = &it.alternate {
+                visitor.visit_statement(alternate);
+            }
+            visitor.leave_scope();
+        } else if let Some(alternate) = &it.alternate {
             visitor.visit_statement(alternate);
         }
         visitor.leave_node(kind);

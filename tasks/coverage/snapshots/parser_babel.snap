@@ -2,7 +2,7 @@ commit: b835f0c6
 
 parser_babel Summary:
 AST Parsed     : 2304/2304 (100.00%)
-Positive Passed: 2283/2304 (99.09%)
+Positive Passed: 2284/2304 (99.13%)
 Negative Passed: 1828/1843 (99.19%)
 Expect Syntax Error: tasks/coverage/babel/packages/babel-parser/test/fixtures/typescript/cast/unparenthesized-assert-and-assign/input.ts
 
@@ -41,26 +41,6 @@ Expect to Parse: tasks/coverage/babel/packages/babel-parser/test/fixtures/annex-
  1 │ export default from <!-- c
    · ──────
  2 │ "x";
-   ╰────
-
-Expect to Parse: tasks/coverage/babel/packages/babel-parser/test/fixtures/annex-b/enabled/3.3-function-in-if-body-lexical-redeclaration/input.js
-
-  × Identifier `f` has already been declared
-   ╭─[babel/packages/babel-parser/test/fixtures/annex-b/enabled/3.3-function-in-if-body-lexical-redeclaration/input.js:1:17]
- 1 │ if (0) function f() {} let f;
-   ·                 ┬          ┬
-   ·                 │          ╰── It can not be redeclared here
-   ·                 ╰── `f` has already been declared here
- 2 │ { if (0) function g() {} let g; }
-   ╰────
-
-  × Identifier `g` has already been declared
-   ╭─[babel/packages/babel-parser/test/fixtures/annex-b/enabled/3.3-function-in-if-body-lexical-redeclaration/input.js:2:19]
- 1 │ if (0) function f() {} let f;
- 2 │ { if (0) function g() {} let g; }
-   ·                   ┬          ┬
-   ·                   │          ╰── It can not be redeclared here
-   ·                   ╰── `g` has already been declared here
    ╰────
 
 Expect to Parse: tasks/coverage/babel/packages/babel-parser/test/fixtures/es2015/let/export-default-let-with-linebreak-and-keyword/input.js

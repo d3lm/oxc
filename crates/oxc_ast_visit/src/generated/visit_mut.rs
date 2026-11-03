@@ -2201,8 +2201,20 @@ pub mod walk_mut {
         visitor.enter_node(kind);
         visitor.visit_span(&mut it.span);
         visitor.visit_expression(&mut it.test);
-        visitor.visit_statement(&mut it.consequent);
-        if let Some(alternate) = &mut it.alternate {
+        if it.consequent_has_scope() {
+            visitor.enter_scope(ScopeFlags::empty(), &it.consequent_scope_id);
+            visitor.visit_statement(&mut it.consequent);
+            visitor.leave_scope();
+        } else {
+            visitor.visit_statement(&mut it.consequent);
+        }
+        if it.alternate_has_scope() {
+            visitor.enter_scope(ScopeFlags::empty(), &it.alternate_scope_id);
+            if let Some(alternate) = &mut it.alternate {
+                visitor.visit_statement(alternate);
+            }
+            visitor.leave_scope();
+        } else if let Some(alternate) = &mut it.alternate {
             visitor.visit_statement(alternate);
         }
         visitor.leave_node(kind);

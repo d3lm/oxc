@@ -612,26 +612,6 @@ pub fn check_variable_declarator_redeclaration(
     });
 }
 
-/// Check for Annex B `if (foo) function a() {} else function b() {}`
-pub fn is_function_decl_part_of_if_statement(
-    function: &Function,
-    builder: &SemanticBuilder,
-) -> bool {
-    debug_assert!(function.is_declaration());
-
-    // Function declarations cannot be `consequent` or `alternate` of an `IfStatement` in strict mode.
-    // This check is redundant - parent kind lookup below will always return `false` in strict mode.
-    // But this check is cheaper, and strict mode code is more common than sloppy mode, so we do this cheap check first.
-    if builder.current_scope_flags().is_strict_mode() {
-        return false;
-    }
-
-    // A function declaration whose parent is an `IfStatement` can only be
-    // either that `IfStatement`'s `consequent` or `alternate`
-    // (can't be `test` because that's an expression)
-    matches!(builder.ancestry().parent_kind(), AstKind::IfStatement(_))
-}
-
 // It is a Syntax Error if the LexicallyDeclaredNames of StatementList contains any duplicate entries,
 // unless the source text matched by this production is not strict mode code
 // and the duplicate entries are only bound by FunctionDeclarations.
@@ -667,10 +647,6 @@ fn check_redeclared_function(
     redeclarations: &[Redeclaration],
     ctx: &SemanticBuilder<'_>,
 ) {
-    if is_function_decl_part_of_if_statement(func, ctx) {
-        return;
-    }
-
     // The current declaration is the last entry; `prev` is the one before it.
     // The list always has 2+ entries here (see `check_function_redeclaration`), so a previous declaration exists.
     debug_assert!(redeclarations.len() >= 2);

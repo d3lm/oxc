@@ -873,6 +873,23 @@ impl<'a> SemanticBuilder<'a> {
         );
     }
 
+    /// Visit the `consequent` or `alternate` of an `IfStatement`,
+    /// in its own scope if it has one (see [`IfStatement::consequent_has_scope`]).
+    fn visit_if_branch(
+        &mut self,
+        branch: &Statement<'a>,
+        has_scope: bool,
+        scope_id: &Cell<Option<ScopeId>>,
+    ) {
+        if has_scope {
+            self.enter_scope(ScopeFlags::empty(), scope_id);
+            self.visit_statement(branch);
+            self.leave_scope();
+        } else {
+            self.visit_statement(branch);
+        }
+    }
+
     fn visit_parameter_decorators(&mut self, decorators: &ArenaVec<'a, Decorator<'a>>) {
         if decorators.is_empty() {
             return;
@@ -1657,7 +1674,11 @@ impl<'a> Visit<'a> for SemanticBuilder<'a> {
         });
         /* cfg */
 
-        self.visit_statement(&stmt.consequent);
+        self.visit_if_branch(
+            &stmt.consequent,
+            stmt.consequent_has_scope(),
+            &stmt.consequent_scope_id,
+        );
 
         /* cfg */
         #[cfg(feature = "cfg")]
@@ -1670,7 +1691,7 @@ impl<'a> Visit<'a> for SemanticBuilder<'a> {
             let else_graph_ix = control_flow!(self, |cfg| cfg.new_basic_block_normal());
             /* cfg */
 
-            self.visit_statement(alternate);
+            self.visit_if_branch(alternate, stmt.alternate_has_scope(), &stmt.alternate_scope_id);
 
             control_flow!(self, |cfg| Some((else_graph_ix, cfg.current_node_ix)))
         } else {
@@ -1679,7 +1700,7 @@ impl<'a> Visit<'a> for SemanticBuilder<'a> {
 
         #[cfg(not(feature = "cfg"))]
         if let Some(alternate) = &stmt.alternate {
-            self.visit_statement(alternate);
+            self.visit_if_branch(alternate, stmt.alternate_has_scope(), &stmt.alternate_scope_id);
         }
 
         /* cfg - bb after if statement joins consequent and alternate */

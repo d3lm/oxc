@@ -807,6 +807,8 @@ impl<'a> Dummy<'a> for IfStatement<'a> {
             test: Dummy::dummy(allocator),
             consequent: Dummy::dummy(allocator),
             alternate: Dummy::dummy(allocator),
+            consequent_scope_id: Dummy::dummy(allocator),
+            alternate_scope_id: Dummy::dummy(allocator),
         }
     }
 }

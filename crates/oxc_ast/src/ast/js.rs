@@ -1243,6 +1243,10 @@ pub struct ExpressionStatement<'a> {
 }
 
 /// If Statement
+///
+/// A branch which is a function declaration has its own scope,
+/// as if it were wrapped in a block (Annex B.3.3): `if (x) function f() {}` is `if (x) { function f() {} }`.
+/// See [`IfStatement::consequent_has_scope`] and [`IfStatement::alternate_has_scope`].
 #[ast(visit)]
 #[derive(Debug)]
 #[generate_derive(CloneIn, Dummy, ReplaceWith, TakeIn)]
@@ -1251,8 +1255,14 @@ pub struct IfStatement<'a> {
     pub node_id: Cell<NodeId>,
     pub span: Span,
     pub test: Expression<'a>,
+    #[scope(field_scope(id = consequent_scope_id, when = self.consequent_has_scope()))]
     pub consequent: Statement<'a>,
+    #[scope(field_scope(id = alternate_scope_id, when = self.alternate_has_scope()))]
     pub alternate: Option<Statement<'a>>,
+    /// Scope of `consequent`, if it is a function declaration
+    pub consequent_scope_id: Cell<Option<ScopeId>>,
+    /// Scope of `alternate`, if it is a function declaration
+    pub alternate_scope_id: Cell<Option<ScopeId>>,
 }
 
 /// Do-While Statement
