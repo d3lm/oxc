@@ -16,6 +16,7 @@ use crate::{
 };
 
 use super::{
+    super::visit::else_branch,
     ancestor::{get_visited_fields, is_ast_type_with_visitor},
     traverse_snake_name,
 };
@@ -209,19 +210,19 @@ fn generate_walk_for_struct(
                 );
             });
             let field_walk_code = generate_field_walk(struct_def, field, schema);
-            fields_code.extend(field_walk_code);
+            fields_code.extend(wrap_field_scope(field_walk_code, struct_def, field, schema));
         } else if is_option {
             // For Option fields: retag goes inside the if let Some block
             let retag = quote! { ctx.retag_stack(AncestorType::#variant_ident); };
             let field_walk_code =
                 generate_field_walk_option_with_retag(struct_def, field, schema, &retag);
-            fields_code.extend(field_walk_code);
+            fields_code.extend(wrap_field_scope(field_walk_code, struct_def, field, schema));
         } else {
             fields_code.extend(quote! {
                 ctx.retag_stack(AncestorType::#variant_ident);
             });
             let field_walk_code = generate_field_walk(struct_def, field, schema);
-            fields_code.extend(field_walk_code);
+            fields_code.extend(wrap_field_scope(field_walk_code, struct_def, field, schema));
         }
     }
 
@@ -324,6 +325,44 @@ fn generate_scope_code(struct_def: &StructDef) -> (TokenStream, TokenStream, boo
     }
 
     (enter_code, exit_code, true)
+}
+
+/// Wrap the walk code for a struct field in scope enter/exit code,
+/// if the field has its own scope (`#[scope(field_scope(...))]`).
+///
+/// A field scope is a block scope, but not a var-hoisting scope.
+fn wrap_field_scope(
+    field_walk_code: TokenStream,
+    struct_def: &StructDef,
+    field: &FieldDef,
+    schema: &Schema,
+) -> TokenStream {
+    let Some(field_scope) = &field.visit.field_scope else { return field_walk_code };
+
+    let id_field = field_scope.id_field(struct_def, schema);
+    let type_screaming_name = struct_def.snake_name().cow_to_ascii_uppercase().into_owned();
+    let scope_id_offset = format_ident!(
+        "OFFSET_{}_{}",
+        type_screaming_name,
+        id_field.name().cow_to_ascii_uppercase()
+    );
+    let when =
+        syn::parse_str::<syn::Expr>(&field_scope.when.cow_replace("self", "(*node)")).unwrap();
+    let else_branch = else_branch(field_walk_code.clone(), field, schema);
+
+    quote! {
+        if #when {
+            let previous_scope_id = ctx.current_scope_id();
+            let previous_block_scope_id = ctx.current_block_scope_id();
+            let current_scope_id = (*((node as *mut u8).add(ancestor::#scope_id_offset)
+                as *mut Cell<Option<ScopeId>>)).get().unwrap();
+            ctx.set_current_scope_id(current_scope_id);
+            ctx.set_current_block_scope_id(current_scope_id);
+            #field_walk_code
+            ctx.set_current_scope_id(previous_scope_id);
+            ctx.set_current_block_scope_id(previous_block_scope_id);
+        } else #else_branch
+    }
 }
 
 /// Generate the walk code for a single struct field.
