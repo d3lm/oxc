@@ -170,6 +170,42 @@ function _() {
 	return e;
 });
 
+function _() { var x = 1; if (x) function g() {} let g = 2; return [x, g]; }
+function _() {
+	var e = 1;
+	if (e) function t() {}
+	let t = 2;
+	return [e, t];
+}
+
+function _() { var g; if (x) function g() {} return g; }
+function _() {
+	var e;
+	if (x) function e() {}
+	return e;
+}
+
+function _() { var g = 0; { let g; if (x) function g() {} } return g; }
+function _() {
+	var e = 0;
+	{
+		let e;
+		if (x) function t() {}
+	}
+	return e;
+}
+
+function _() { if (x) function g() { return 1; } else function g() { return 2; } return g(); }
+function _() {
+	if (x) function e() {
+		return 1;
+	}
+	else function e() {
+		return 2;
+	}
+	return e();
+}
+
 function _() { eval(''); { let e; { function e() {} let x = 1; use(x); } } } function f() { var g; { function g() {} } return g; }
 function _() {
 	eval("");

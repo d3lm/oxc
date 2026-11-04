@@ -35,6 +35,7 @@ use super::{
     define_generator,
     visit::{
         INLINE_LIMIT, Target, VisitorOutputs, generate_enter_and_leave_node, generate_visit_type,
+        wrap_field_scope,
     },
 };
 
@@ -448,6 +449,7 @@ fn generate_struct_visitor(
     let mut field_visits_mut = TokenStream::new();
     for (field_index, field) in struct_def.fields.iter().enumerate() {
         if let Some((visit, visit_mut)) = generate_struct_field_visit(
+            struct_def,
             field,
             field_index,
             &mut scope_entry,
@@ -501,6 +503,7 @@ fn generate_struct_visitor(
 ///
 /// Also inserts `enter_scope` / `leave_scope` calls before the visit call if needed.
 fn generate_struct_field_visit(
+    struct_def: &StructDef,
     field: &FieldDef,
     field_index: usize,
     scope_entry: &mut Option<(usize, TokenStream)>,
@@ -526,6 +529,8 @@ fn generate_struct_field_visit(
         true,
         schema,
     )?;
+    visit = wrap_field_scope(visit, field, struct_def, schema);
+    visit_mut = wrap_field_scope(visit_mut, field, struct_def, schema);
 
     // Insert `leave_scope` / `enter_scope` before this field if scope boundary falls here.
     // Handle exit first, so entering and exiting on the same field produces `enter` before `leave`.

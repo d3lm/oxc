@@ -182,6 +182,24 @@ fn test_fold_if_statement() {
 }
 
 #[test]
+fn test_fold_if_statement_function_branch() {
+    // A function declaration branch keeps its own block scope (Annex B.3.3).
+    let options = default_options();
+    test_options_source_type(
+        "function t() { if (true) function f() {} let f = 1; return f; }",
+        "function t() { { function f() {} } let f = 1; return 1; }",
+        SourceType::script(),
+        &options,
+    );
+    test_options_source_type(
+        "function t() { var r = typeof f; if (true) function f() {} return [r, typeof f]; }",
+        "function t() { var r = typeof f; { function f() {} } return [r, typeof f]; }",
+        SourceType::script(),
+        &options,
+    );
+}
+
+#[test]
 fn test_fold_conditional() {
     test("true ? foo() : bar()", "foo()");
     test("false ? foo() : bar()", "bar()");

@@ -63,9 +63,8 @@ fn test_for_break_preserves_annex_b_function_scope() {
             f = 0;
         }
         console.log(typeof f, f);",
-        "for (var i = 0; i++ < 1;) {
-            if (x) break;
-            else function f() {}
+        "for (var i = 0; i++ < 1 && !x;) {
+            { function f() {} }
             f = 0;
         }
         console.log(typeof f, f);",
@@ -79,9 +78,8 @@ fn test_for_break_preserves_annex_b_function_scope() {
             f = 0;
         }
         console.log(typeof f, f);",
-        "for (var i = 0; i++ < 1;) {
-            if (x) function f() {}
-            else break;
+        "for (var i = 0; i++ < 1 && x;) {
+            { function f() {} }
             f = 0;
         }
         console.log(typeof f, f);",

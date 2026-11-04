@@ -2,13 +2,9 @@ commit: b835f0c6
 
 semantic_babel Summary:
 AST Parsed     : 2304/2304 (100.00%)
-Positive Passed: 2210/2304 (95.92%)
+Positive Passed: 2211/2304 (95.96%)
 semantic Error: tasks/coverage/babel/packages/babel-parser/test/fixtures/annex-b/enabled/1.1-html-comments-open-export-default-from/input.js
 Cannot use export statement outside a module
-
-semantic Error: tasks/coverage/babel/packages/babel-parser/test/fixtures/annex-b/enabled/3.3-function-in-if-body-lexical-redeclaration/input.js
-Identifier `f` has already been declared
-Identifier `g` has already been declared
 
 semantic Error: tasks/coverage/babel/packages/babel-parser/test/fixtures/comments/decorators/decorators-after-export/input.js
 Symbol flags mismatch for "_default":

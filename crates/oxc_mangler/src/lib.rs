@@ -11,10 +11,7 @@ use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 
 pub use base54::base54;
 use oxc_allocator::{Allocator, ArenaVec, BitSet};
-use oxc_ast::{
-    AstKind,
-    ast::{Declaration, Program, Statement},
-};
+use oxc_ast::ast::{Declaration, Program, Statement};
 use oxc_data_structures::inline_string::InlineString;
 use oxc_ecmascript::BoundNames;
 use oxc_semantic::{AstNodes, Reference, Scoping, Semantic, SemanticBuilder, Stats, SymbolId};
@@ -628,7 +625,7 @@ impl<'a> SlotAssignment<'a> {
         let mut reusable_slots = ArenaVec::new_in(&allocator);
         // Pre-computed BitSet for ancestor membership tests - reused across iterations
         let mut ancestor_set = BitSet::new_in(scoping.scopes_len(), allocator);
-        let annex_b = AnnexBBlockFunctions::collect(scoping, ast_nodes, allocator);
+        let annex_b = AnnexBBlockFunctions::collect(scoping, allocator);
         let mut annex_b_cursor = 0;
 
         // Walk down the scope tree and assign a slot number for each symbol. Doing it as a scope
@@ -827,7 +824,7 @@ struct AnnexBBlockFunctions<'a> {
 }
 
 impl<'a> AnnexBBlockFunctions<'a> {
-    fn collect(scoping: &Scoping, ast_nodes: &AstNodes, allocator: &'a Allocator) -> Self {
+    fn collect(scoping: &Scoping, allocator: &'a Allocator) -> Self {
         let mut functions = ArenaVec::new_in(&allocator);
         if !scoping.scope_flags(scoping.root_scope_id()).is_strict_mode() {
             for (scope_id, bindings) in scoping.iter_bindings() {
@@ -841,7 +838,7 @@ impl<'a> AnnexBBlockFunctions<'a> {
                             .scope_ancestors(scope_id)
                             .find(|&id| scoping.scope_flags(id).is_var())
                     {
-                        let alias = Self::alias(symbol_id, var_scope_id, scoping, ast_nodes);
+                        let alias = Self::alias(symbol_id, var_scope_id, scoping);
                         functions.push((var_scope_id, symbol_id, alias));
                     }
                 }
@@ -871,17 +868,11 @@ impl<'a> AnnexBBlockFunctions<'a> {
                 .intersects(SymbolFlags::FunctionExpression | SymbolFlags::AsyncOrGeneratorFunction)
     }
 
-    fn alias(
-        symbol_id: SymbolId,
-        var_scope_id: ScopeId,
-        scoping: &Scoping,
-        ast_nodes: &AstNodes,
-    ) -> Option<SymbolId> {
+    fn alias(symbol_id: SymbolId, var_scope_id: ScopeId, scoping: &Scoping) -> Option<SymbolId> {
         let name = scoping.symbol_ident(symbol_id);
         let alias = scoping.get_binding(var_scope_id, name)?;
         // A declaration of the same name in an enclosing block shadows the var scope's binding,
-        // unless it is a simple catch parameter (Annex B.3.4), or a function declaration that
-        // is the body of an `if` statement, which has its own implicit block (Annex B.3.3).
+        // unless it is a simple catch parameter (Annex B.3.4).
         let is_shadowed = scoping
             .scope_ancestors(scoping.symbol_scope_id(symbol_id))
             .skip(1)
@@ -891,10 +882,6 @@ impl<'a> AnnexBBlockFunctions<'a> {
                 !scoping
                     .symbol_flags(binding)
                     .contains(SymbolFlags::CatchVariable | SymbolFlags::FunctionScopedVariable)
-                    && !matches!(
-                        ast_nodes.parent_kind(scoping.symbol_declaration(binding)),
-                        AstKind::IfStatement(_)
-                    )
             });
         (!is_shadowed).then_some(alias)
     }

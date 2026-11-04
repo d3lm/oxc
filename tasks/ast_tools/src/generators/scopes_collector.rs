@@ -2,8 +2,10 @@
 
 use std::iter;
 
+use cow_utils::CowUtils;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::{Expr, parse_str};
 
 use oxc_index::IndexVec;
 
@@ -16,7 +18,7 @@ use crate::{
 
 use super::{
     define_generator,
-    visit::{INLINE_LIMIT, Target, VisitorOutputs, generate_visit_type},
+    visit::{INLINE_LIMIT, Target, VisitorOutputs, else_branch, generate_visit_type},
 };
 
 /// Generator for `ChildScopeCollector` visitor.
@@ -142,7 +144,9 @@ impl<'s> ScopesCalculator<'s> {
     fn calculate_struct(&mut self, type_id: TypeId) -> CalculationState {
         let struct_def = self.schema.struct_def(type_id);
 
-        let state = if struct_def.visit.scope.is_some() {
+        let state = if struct_def.visit.scope.is_some()
+            || struct_def.fields.iter().any(|field| field.visit.field_scope.is_some())
+        {
             CalculationState::Calculated(true)
         } else {
             // Check if any field contains a scope
@@ -368,16 +372,34 @@ fn generate_visit_method_for_struct(
     } else if struct_def.visit.contains_scope {
         // Struct does not have its own scope, but at least one of fields does.
         // Only visit fields which contain a scope.
+        // A field with its own scope (`#[scope(field_scope(...))]`) adds that scope when it is
+        // entered, instead of being visited.
         let mut body = quote!();
         let mut stmt_count = 0;
+        let mut has_field_scope = false;
         for field in &struct_def.fields {
-            if let Some(visit) = generate_visit_stmt_for_struct_field(field, schema) {
+            let visit = generate_visit_stmt_for_struct_field(field, schema);
+            if let Some(field_scope) = &field.visit.field_scope {
+                has_field_scope = true;
+                let id_field_ident = field_scope.id_field(struct_def, schema).ident();
+                let when = parse_str::<Expr>(&field_scope.when.cow_replace("self", "it")).unwrap();
+                let else_branch = visit.map(|visit| {
+                    let else_branch = else_branch(visit, field, schema);
+                    quote!( else #else_branch )
+                });
+                body.extend(quote! {
+                    if #when {
+                        self.add_scope(&it.#id_field_ident);
+                    } #else_branch
+                });
+                stmt_count += 1;
+            } else if let Some(visit) = visit {
                 body.extend(visit);
                 stmt_count += 1;
             }
         }
 
-        if stmt_count == struct_def.fields.len() {
+        if !has_field_scope && stmt_count == struct_def.fields.len() {
             // All fields visited. Use default visitor method.
             return None;
         }

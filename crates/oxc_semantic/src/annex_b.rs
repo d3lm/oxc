@@ -8,7 +8,7 @@
 //!
 //! <https://tc39.es/ecma262/#sec-block-level-function-declarations-web-legacy-compatibility-semantics>
 
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashMap;
 
 use oxc_str::Ident;
 use oxc_syntax::{
@@ -27,9 +27,6 @@ pub struct AnnexBHoists<'a> {
     /// Keys of `hoists` in insertion order, so that the entries of a var scope can be removed
     /// when leaving it. May contain keys already removed from `hoists`.
     keys: Vec<(ScopeId, Ident<'a>)>,
-    /// Symbols created by function declarations that are the body of an `if` statement.
-    /// Annex B.3.3 places these in their own implicit block, so they do not prevent hoisting.
-    if_statement_functions: FxHashSet<SymbolId>,
 }
 
 impl AnnexBHoists<'_> {
@@ -70,20 +67,11 @@ impl<'a> SemanticBuilder<'a> {
                     .scoping
                     .symbol_flags(symbol_id)
                     .contains(SymbolFlags::CatchVariable | SymbolFlags::FunctionScopedVariable)
-                && !self.annex_b.if_statement_functions.contains(&symbol_id)
             {
                 return None;
             }
         }
         None
-    }
-
-    /// Must be called after binding a function declaration that is the body of an `if` statement.
-    pub(crate) fn declare_annex_b_if_statement_function(&mut self, symbol_id: SymbolId) {
-        // Only if the declaration created the symbol, rather than redeclaring another declaration.
-        if self.scoping.symbol_declaration(symbol_id) == self.node_store.current_node_id {
-            self.annex_b.if_statement_functions.insert(symbol_id);
-        }
     }
 
     /// Must be called before declaring a lexical binding `name` in the current scope: a

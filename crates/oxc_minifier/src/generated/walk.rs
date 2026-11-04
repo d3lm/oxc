@@ -1578,12 +1578,50 @@ unsafe fn walk_if_statement<'a, Tr: Traverse<'a>>(
         ctx,
     );
     ctx.retag_stack(AncestorType::IfStatementConsequent);
-    walk_statement(
-        traverser,
-        (node as *mut u8).add(ancestor::OFFSET_IF_STATEMENT_CONSEQUENT) as *mut Statement,
-        ctx,
-    );
-    if let Some(field) = &mut *((node as *mut u8).add(ancestor::OFFSET_IF_STATEMENT_ALTERNATE)
+    if (*node).consequent_has_scope() {
+        let previous_scope_id = ctx.current_scope_id();
+        let previous_block_scope_id = ctx.current_block_scope_id();
+        let current_scope_id = (*((node as *mut u8)
+            .add(ancestor::OFFSET_IF_STATEMENT_CONSEQUENT_SCOPE_ID)
+            as *mut Cell<Option<ScopeId>>))
+            .get()
+            .unwrap();
+        ctx.set_current_scope_id(current_scope_id);
+        ctx.set_current_block_scope_id(current_scope_id);
+        walk_statement(
+            traverser,
+            (node as *mut u8).add(ancestor::OFFSET_IF_STATEMENT_CONSEQUENT) as *mut Statement,
+            ctx,
+        );
+        ctx.set_current_scope_id(previous_scope_id);
+        ctx.set_current_block_scope_id(previous_block_scope_id);
+    } else {
+        walk_statement(
+            traverser,
+            (node as *mut u8).add(ancestor::OFFSET_IF_STATEMENT_CONSEQUENT) as *mut Statement,
+            ctx,
+        );
+    }
+    if (*node).alternate_has_scope() {
+        let previous_scope_id = ctx.current_scope_id();
+        let previous_block_scope_id = ctx.current_block_scope_id();
+        let current_scope_id = (*((node as *mut u8)
+            .add(ancestor::OFFSET_IF_STATEMENT_ALTERNATE_SCOPE_ID)
+            as *mut Cell<Option<ScopeId>>))
+            .get()
+            .unwrap();
+        ctx.set_current_scope_id(current_scope_id);
+        ctx.set_current_block_scope_id(current_scope_id);
+        if let Some(field) = &mut *((node as *mut u8).add(ancestor::OFFSET_IF_STATEMENT_ALTERNATE)
+            as *mut Option<Statement>)
+        {
+            ctx.retag_stack(AncestorType::IfStatementAlternate);
+            walk_statement(traverser, field as *mut _, ctx);
+        }
+        ctx.set_current_scope_id(previous_scope_id);
+        ctx.set_current_block_scope_id(previous_block_scope_id);
+    } else if let Some(field) = &mut *((node as *mut u8)
+        .add(ancestor::OFFSET_IF_STATEMENT_ALTERNATE)
         as *mut Option<Statement>)
     {
         ctx.retag_stack(AncestorType::IfStatementAlternate);

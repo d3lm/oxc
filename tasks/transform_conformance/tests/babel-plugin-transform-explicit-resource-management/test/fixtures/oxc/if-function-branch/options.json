@@ -1,0 +1,4 @@
+{
+  "plugins": ["transform-explicit-resource-management"],
+  "sourceType": "script"
+}

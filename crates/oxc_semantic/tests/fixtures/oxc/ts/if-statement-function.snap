@@ -1,0 +1,121 @@
+---
+source: crates/oxc_semantic/tests/main.rs
+input_file: crates/oxc_semantic/tests/fixtures/oxc/ts/if-statement-function.ts
+---
+[
+  {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [],
+            "flags": "ScopeFlags(Function)",
+            "id": 2,
+            "node": "Function(f)",
+            "symbols": []
+          }
+        ],
+        "flags": "ScopeFlags(0x0)",
+        "id": 1,
+        "node": "IfStatement",
+        "symbols": []
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 5,
+                "node": "Function(h)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 4,
+            "node": "IfStatement",
+            "symbols": []
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 7,
+                "node": "Function(h)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 6,
+            "node": "IfStatement",
+            "symbols": []
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 3,
+        "node": "Function(g)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(FunctionScopedVariable)",
+            "id": 2,
+            "name": "c",
+            "node": "FormalParameter(c)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 2,
+                "name": "c",
+                "node_id": 19,
+                "scope_id": 3
+              }
+            ]
+          },
+          {
+            "flags": "SymbolFlags(Function)",
+            "id": 3,
+            "name": "h",
+            "node": "Function(h)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 3,
+                "name": "h",
+                "node_id": 29,
+                "scope_id": 3
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "flags": "ScopeFlags(Top)",
+    "id": 0,
+    "node": "Program",
+    "symbols": [
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 0,
+        "name": "f",
+        "node": "Function(f)",
+        "references": [
+          {
+            "flags": "ReferenceFlags(Read)",
+            "id": 1,
+            "name": "f",
+            "node_id": 9,
+            "scope_id": 0
+          }
+        ]
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 1,
+        "name": "g",
+        "node": "Function(g)",
+        "references": []
+      }
+    ]
+  }
+]

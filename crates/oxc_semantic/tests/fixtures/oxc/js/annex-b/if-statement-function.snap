@@ -1,0 +1,508 @@
+---
+source: crates/oxc_semantic/tests/main.rs
+input_file: crates/oxc_semantic/tests/fixtures/oxc/js/annex-b/if-statement-function.js
+---
+[
+  {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 3,
+                "node": "Function(f)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 2,
+            "node": "IfStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(Function)",
+                "id": 1,
+                "name": "f",
+                "node": "Function(f)",
+                "references": [
+                  {
+                    "flags": "ReferenceFlags(Read)",
+                    "id": 0,
+                    "name": "f",
+                    "node_id": 12,
+                    "scope_id": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 1,
+        "node": "Function(laterLet)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(BlockScopedVariable)",
+            "id": 2,
+            "name": "f",
+            "node": "VariableDeclarator(f)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 1,
+                "name": "f",
+                "node_id": 18,
+                "scope_id": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 6,
+                "node": "Function(f)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 5,
+            "node": "IfStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(Function)",
+                "id": 5,
+                "name": "f",
+                "node": "Function(f)",
+                "references": []
+              }
+            ]
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 4,
+        "node": "Function(earlierLet)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(BlockScopedVariable)",
+            "id": 4,
+            "name": "f",
+            "node": "VariableDeclarator(f)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 2,
+                "name": "f",
+                "node_id": 34,
+                "scope_id": 4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [],
+                    "flags": "ScopeFlags(Function)",
+                    "id": 10,
+                    "node": "Function(f)",
+                    "symbols": []
+                  }
+                ],
+                "flags": "ScopeFlags(0x0)",
+                "id": 9,
+                "node": "IfStatement",
+                "symbols": [
+                  {
+                    "flags": "SymbolFlags(Function)",
+                    "id": 8,
+                    "name": "f",
+                    "node": "Function(f)",
+                    "references": []
+                  }
+                ]
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 8,
+            "node": "BlockStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(BlockScopedVariable)",
+                "id": 7,
+                "name": "f",
+                "node": "VariableDeclarator(f)",
+                "references": []
+              }
+            ]
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 7,
+        "node": "Function(enclosingBlockLet)",
+        "symbols": []
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 13,
+                "node": "Function(f)",
+                "symbols": [
+                  {
+                    "flags": "SymbolFlags(FunctionScopedVariable)",
+                    "id": 12,
+                    "name": "a",
+                    "node": "FormalParameter(a)",
+                    "references": []
+                  }
+                ]
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 12,
+            "node": "IfStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(Function)",
+                "id": 11,
+                "name": "f",
+                "node": "Function(f)",
+                "references": [
+                  {
+                    "flags": "ReferenceFlags(Read)",
+                    "id": 4,
+                    "name": "f",
+                    "node_id": 64,
+                    "scope_id": 13
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 11,
+        "node": "Function(parameter)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(FunctionScopedVariable)",
+            "id": 10,
+            "name": "f",
+            "node": "FormalParameter(f)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 5,
+                "name": "f",
+                "node_id": 67,
+                "scope_id": 11
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 16,
+                "node": "Function(f)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 15,
+            "node": "IfStatement",
+            "symbols": []
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 18,
+                "node": "Function(f)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 17,
+            "node": "IfStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(Function)",
+                "id": 16,
+                "name": "f",
+                "node": "Function(f)",
+                "references": []
+              }
+            ]
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 14,
+        "node": "Function(bothBranches)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(FunctionScopedVariable)",
+            "id": 14,
+            "name": "c",
+            "node": "FormalParameter(c)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 6,
+                "name": "c",
+                "node_id": 75,
+                "scope_id": 14
+              }
+            ]
+          },
+          {
+            "flags": "SymbolFlags(Function)",
+            "id": 15,
+            "name": "f",
+            "node": "Function(f)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 7,
+                "name": "f",
+                "node_id": 85,
+                "scope_id": 14
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 21,
+                "node": "Function(f)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 20,
+            "node": "IfStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(Function)",
+                "id": 19,
+                "name": "f",
+                "node": "Function(f)",
+                "references": []
+              }
+            ]
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "flags": "ScopeFlags(Function)",
+                "id": 23,
+                "node": "Function(g)",
+                "symbols": []
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 22,
+            "node": "IfStatement",
+            "symbols": []
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 19,
+        "node": "Function(crossBranch)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(FunctionScopedVariable)",
+            "id": 18,
+            "name": "c",
+            "node": "FormalParameter(c)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 8,
+                "name": "c",
+                "node_id": 93,
+                "scope_id": 19
+              }
+            ]
+          },
+          {
+            "flags": "SymbolFlags(Function)",
+            "id": 20,
+            "name": "g",
+            "node": "Function(g)",
+            "references": []
+          },
+          {
+            "flags": "SymbolFlags(BlockScopedVariable)",
+            "id": 21,
+            "name": "f",
+            "node": "VariableDeclarator(f)",
+            "references": [
+              {
+                "flags": "ReferenceFlags(Read)",
+                "id": 9,
+                "name": "f",
+                "node_id": 103,
+                "scope_id": 23
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [],
+                        "flags": "ScopeFlags(Function)",
+                        "id": 28,
+                        "node": "Function(f)",
+                        "symbols": []
+                      }
+                    ],
+                    "flags": "ScopeFlags(0x0)",
+                    "id": 27,
+                    "node": "IfStatement",
+                    "symbols": []
+                  }
+                ],
+                "flags": "ScopeFlags(Function)",
+                "id": 26,
+                "node": "Function(f)",
+                "symbols": [
+                  {
+                    "flags": "SymbolFlags(Function)",
+                    "id": 24,
+                    "name": "f",
+                    "node": "Function(f)",
+                    "references": [
+                      {
+                        "flags": "ReferenceFlags(Read)",
+                        "id": 10,
+                        "name": "f",
+                        "node_id": 124,
+                        "scope_id": 26
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "flags": "ScopeFlags(0x0)",
+            "id": 25,
+            "node": "IfStatement",
+            "symbols": [
+              {
+                "flags": "SymbolFlags(Function)",
+                "id": 23,
+                "name": "f",
+                "node": "Function(f)",
+                "references": []
+              }
+            ]
+          }
+        ],
+        "flags": "ScopeFlags(Function)",
+        "id": 24,
+        "node": "Function(nested)",
+        "symbols": [
+          {
+            "flags": "SymbolFlags(BlockScopedVariable)",
+            "id": 25,
+            "name": "f",
+            "node": "VariableDeclarator(f)",
+            "references": []
+          }
+        ]
+      }
+    ],
+    "flags": "ScopeFlags(Top)",
+    "id": 0,
+    "node": "Program",
+    "symbols": [
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 0,
+        "name": "laterLet",
+        "node": "Function(laterLet)",
+        "references": []
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 3,
+        "name": "earlierLet",
+        "node": "Function(earlierLet)",
+        "references": []
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 6,
+        "name": "enclosingBlockLet",
+        "node": "Function(enclosingBlockLet)",
+        "references": []
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 9,
+        "name": "parameter",
+        "node": "Function(parameter)",
+        "references": []
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 13,
+        "name": "bothBranches",
+        "node": "Function(bothBranches)",
+        "references": []
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 17,
+        "name": "crossBranch",
+        "node": "Function(crossBranch)",
+        "references": []
+      },
+      {
+        "flags": "SymbolFlags(Function)",
+        "id": 22,
+        "name": "nested",
+        "node": "Function(nested)",
+        "references": []
+      }
+    ]
+  }
+]

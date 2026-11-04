@@ -7,8 +7,6 @@ mod typescript;
 use javascript as js;
 use typescript as ts;
 
-pub use javascript::is_function_decl_part_of_if_statement;
-
 /// Perform syntax error checking for the given AST node.
 ///
 /// Must be inlined along with `SemanticBuilder::leave_node` so the compiler can see the

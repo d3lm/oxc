@@ -5413,6 +5413,10 @@ pub(crate) const OFFSET_IF_STATEMENT_SPAN: usize = offset_of!(IfStatement, span)
 pub(crate) const OFFSET_IF_STATEMENT_TEST: usize = offset_of!(IfStatement, test);
 pub(crate) const OFFSET_IF_STATEMENT_CONSEQUENT: usize = offset_of!(IfStatement, consequent);
 pub(crate) const OFFSET_IF_STATEMENT_ALTERNATE: usize = offset_of!(IfStatement, alternate);
+pub(crate) const OFFSET_IF_STATEMENT_CONSEQUENT_SCOPE_ID: usize =
+    offset_of!(IfStatement, consequent_scope_id);
+pub(crate) const OFFSET_IF_STATEMENT_ALTERNATE_SCOPE_ID: usize =
+    offset_of!(IfStatement, alternate_scope_id);
 
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
@@ -5444,6 +5448,22 @@ impl<'a, 't> IfStatementWithoutTest<'a, 't> {
         unsafe {
             &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_ALTERNATE)
                 as *const Option<Statement<'a>>)
+        }
+    }
+
+    #[inline]
+    pub fn consequent_scope_id(self) -> &'t Cell<Option<ScopeId>> {
+        unsafe {
+            &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_CONSEQUENT_SCOPE_ID)
+                as *const Cell<Option<ScopeId>>)
+        }
+    }
+
+    #[inline]
+    pub fn alternate_scope_id(self) -> &'t Cell<Option<ScopeId>> {
+        unsafe {
+            &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_ALTERNATE_SCOPE_ID)
+                as *const Cell<Option<ScopeId>>)
         }
     }
 }
@@ -5485,6 +5505,22 @@ impl<'a, 't> IfStatementWithoutConsequent<'a, 't> {
                 as *const Option<Statement<'a>>)
         }
     }
+
+    #[inline]
+    pub fn consequent_scope_id(self) -> &'t Cell<Option<ScopeId>> {
+        unsafe {
+            &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_CONSEQUENT_SCOPE_ID)
+                as *const Cell<Option<ScopeId>>)
+        }
+    }
+
+    #[inline]
+    pub fn alternate_scope_id(self) -> &'t Cell<Option<ScopeId>> {
+        unsafe {
+            &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_ALTERNATE_SCOPE_ID)
+                as *const Cell<Option<ScopeId>>)
+        }
+    }
 }
 
 impl<'a, 't> GetAddress for IfStatementWithoutConsequent<'a, 't> {
@@ -5521,6 +5557,22 @@ impl<'a, 't> IfStatementWithoutAlternate<'a, 't> {
     pub fn consequent(self) -> &'t Statement<'a> {
         unsafe {
             &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_CONSEQUENT) as *const Statement<'a>)
+        }
+    }
+
+    #[inline]
+    pub fn consequent_scope_id(self) -> &'t Cell<Option<ScopeId>> {
+        unsafe {
+            &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_CONSEQUENT_SCOPE_ID)
+                as *const Cell<Option<ScopeId>>)
+        }
+    }
+
+    #[inline]
+    pub fn alternate_scope_id(self) -> &'t Cell<Option<ScopeId>> {
+        unsafe {
+            &*((self.0 as *const u8).add(OFFSET_IF_STATEMENT_ALTERNATE_SCOPE_ID)
+                as *const Cell<Option<ScopeId>>)
         }
     }
 }

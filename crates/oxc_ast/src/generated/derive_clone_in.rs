@@ -1622,6 +1622,14 @@ impl<'new_alloc> CloneIn<'new_alloc> for IfStatement<'_> {
             test: CloneIn::clone_in_impl(&self.test, with_semantic_ids, allocator),
             consequent: CloneIn::clone_in_impl(&self.consequent, with_semantic_ids, allocator),
             alternate: CloneIn::clone_in_impl(&self.alternate, with_semantic_ids, allocator),
+            consequent_scope_id: oxc_syntax::semantic_id::SemanticId::clone_cell_option_id(
+                &self.consequent_scope_id,
+                with_semantic_ids,
+            ),
+            alternate_scope_id: oxc_syntax::semantic_id::SemanticId::clone_cell_option_id(
+                &self.alternate_scope_id,
+                with_semantic_ids,
+            ),
         }
     }
 }

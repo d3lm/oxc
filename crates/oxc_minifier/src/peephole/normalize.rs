@@ -6,6 +6,7 @@ use oxc_ecmascript::{
     side_effects::{is_typed_array_constructor, is_valid_regexp},
 };
 use oxc_semantic::IsGlobalReference;
+use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 
 use super::PeepholeOptimizations;
@@ -96,6 +97,25 @@ impl<'a> Traverse<'a> for Normalize {
         ctx: &mut TraverseCtx<'a>,
     ) {
         symbol_liveness::register_default_export(node, ctx);
+    }
+
+    // A function declaration `if` branch has its own scope (Annex B.3.3). Wrap it in a block which
+    // takes over that scope, so other passes can move or remove the branch like any other block.
+    // This runs before the branch is walked, so the walk enters the block's scope instead.
+    fn enter_if_statement(&mut self, node: &mut IfStatement<'a>, ctx: &mut TraverseCtx<'a>) {
+        if node.consequent_has_scope() {
+            let scope_id = node.consequent_scope_id.take().unwrap();
+            ctx.replace_statement_with(&mut node.consequent, |stmt, ctx| {
+                Statement::new_block_statement_with_scope_id(stmt.span(), [stmt], scope_id, ctx)
+            });
+        }
+        if node.alternate_has_scope() {
+            let scope_id = node.alternate_scope_id.take().unwrap();
+            let alternate = node.alternate.as_mut().unwrap();
+            ctx.replace_statement_with(alternate, |stmt, ctx| {
+                Statement::new_block_statement_with_scope_id(stmt.span(), [stmt], scope_id, ctx)
+            });
+        }
     }
 
     fn exit_statements(

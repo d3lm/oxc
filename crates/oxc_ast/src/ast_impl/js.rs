@@ -1106,6 +1106,24 @@ impl Statement<'_> {
     }
 }
 
+impl IfStatement<'_> {
+    /// Returns `true` if `consequent` has its own scope, stored in `consequent_scope_id`.
+    ///
+    /// A function declaration branch behaves as if it were wrapped in a block (Annex B.3.3).
+    #[inline]
+    pub fn consequent_has_scope(&self) -> bool {
+        matches!(self.consequent, Statement::FunctionDeclaration(_))
+    }
+
+    /// Returns `true` if `alternate` has its own scope, stored in `alternate_scope_id`.
+    ///
+    /// A function declaration branch behaves as if it were wrapped in a block (Annex B.3.3).
+    #[inline]
+    pub fn alternate_has_scope(&self) -> bool {
+        matches!(self.alternate, Some(Statement::FunctionDeclaration(_)))
+    }
+}
+
 impl Directive<'_> {
     /// A Use Strict Directive is an ExpressionStatement in a Directive Prologue whose StringLiteral is either of the exact code point sequences "use strict" or 'use strict'.
     /// A Use Strict Directive may not contain an EscapeSequence or LineContinuation.
