@@ -1,7 +1,7 @@
 parser_misc Summary:
 AST Parsed     : 135/135 (100.00%)
 Positive Passed: 135/135 (100.00%)
-Negative Passed: 274/274 (100.00%)
+Negative Passed: 275/275 (100.00%)
 
   × TS(1275): 'accessor' modifier can only appear on a property declaration.
    ╭─[misc/fail/accessor-modifier-abstract-method.ts:1:29]
@@ -67,6 +67,15 @@ Negative Passed: 274/274 (100.00%)
    ·                           │                   ╰── It can not be redeclared here
    ·                           ╰── `g` has already been declared here
    ╰────
+
+  × Invalid function declaration
+   ╭─[misc/fail/annex-b-if-function-strict-parameter.js:3:13]
+ 2 │   "use strict";
+ 3 │   if (true) function f() {}
+   ·             ───────────────
+ 4 │ }
+   ╰────
+  help: In strict mode code, functions can only be declared at top level or inside a block
 
   × Cannot assign to 'arguments' in strict mode
    ╭─[misc/fail/arguments-eval-ambient.ts:2:13]

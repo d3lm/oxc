@@ -658,7 +658,14 @@ fn check_redeclared_function(
         return;
     }
 
-    let current_scope_flags = ctx.current_scope_flags();
+    // An `if` branch function is in the branch's own scope. It can only have redeclarations
+    // if it is bound in the enclosing scope instead (see `Binder for Function`), so check that scope.
+    let scope_id = if matches!(ctx.ancestry().parent_kind(), AstKind::IfStatement(_)) {
+        ctx.scoping.scope_parent_id(ctx.current_scope_id).unwrap()
+    } else {
+        ctx.current_scope_id
+    };
+    let current_scope_flags = ctx.scoping.scope_flags(scope_id);
     if prev.flags.intersects(SymbolFlags::FunctionScopedVariable | SymbolFlags::Function)
         && (current_scope_flags.is_function()
             || current_scope_flags.is_class_static_block()
